@@ -39,7 +39,7 @@ module PFD(     		//phase frequency detector
 	typedef enum logic [1:0]{
 		IDLE = 2'b00,
 		UP = 2'b01,
-		DOWN = 2'b10,
+		DOWN = 2'b10
 	}state_t;
 	
 	state_t current_state, next_state;
@@ -55,10 +55,7 @@ module PFD(     		//phase frequency detector
 	
 	//State Transition Logic
 	always_comb begin
-		if(!rst_n)begin
-			next_state <= IDLE;
-		end else begin
-			case(current_state)
+		case(current_state)
 				IDLE: begin
 					if(ref_edge && !fb_edge)begin
 						next_state = UP;
@@ -71,28 +68,27 @@ module PFD(     		//phase frequency detector
 				UP: begin
 					if(fb_edge)begin
 						next_state = IDLE;
+					end else begin
+						next_state = current_state;
 					end
 				end
 				DOWN: begin
 					if(ref_edge)begin
 						next_state = IDLE;
+					end else begin
+						next_state = current_state;
 					end
 				end
 				default: begin
 					next_state = IDLE;
 				end
-			endcase
-		end
+		endcase
 	end
 	
 	
 	//output stage
 	always_comb begin
-		if(!rst_n)begin
-			up <= 1'b0;
-			down <= 1'b0;
-		end else begin
-			case(current_state)
+		case(current_state)
 				IDLE: begin
 					up <= 1'b0;
 					down <= 1'b0;
@@ -109,8 +105,7 @@ module PFD(     		//phase frequency detector
 					up <= 1'b0;
 					down <= 1'b0;
 				end
-			endcase
-		end
+		endcase
 	end
 	
 	
