@@ -58,5 +58,7 @@ module DPLL_top(
 	end
 	
 	assign enable = rst_n;
+
+	assign pll_out = pll_clk;
 	
 endmodule
