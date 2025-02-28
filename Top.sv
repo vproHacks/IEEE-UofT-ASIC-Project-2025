@@ -12,13 +12,16 @@ module DPLL_top(
 	logic down;
 	logic pll_clk;
 	logic enable;   //indicator for DCO
-	
+
+	/* Altera PLL IP for 100MHz
+ 	In case of actual asic implementation, replace it with DCO cell
 	DCO_0002 u1(
 		.refclk(clk_ref),
 		.rst(!rst_n),
 		.outclk_0(pll_clk),
 		.locked()
 	);
+ 	*/
 	
 	//Phase Frequency Detector
 	PFD u2 (
