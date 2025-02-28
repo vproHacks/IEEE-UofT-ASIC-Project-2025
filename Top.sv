@@ -11,8 +11,15 @@ module DPLL_top(
 	logic up;
 	logic down;
 	logic pll_clk;
-	logic enable;
-
+	logic enable;   //indicator for DCO
+	
+	DCO_0002 u1(
+		.refclk(clk_ref),
+		.rst(!rst_n),
+		.outclk_0(pll_clk),
+		.locked()
+	);
+	
 	//Phase Frequency Detector
 	PFD u2 (
 		.clk(pll_clk),
