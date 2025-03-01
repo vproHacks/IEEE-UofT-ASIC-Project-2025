@@ -4,7 +4,7 @@ module N_divide(
 	output logic clk_fb			//10M feedback
 );
 	
-	reg [2:0] cnt;
+	logic [2:0] cnt;
 	
 	always_ff@(posedge clk_out or negedge rst_n)begin
 		if(!rst_n)begin
