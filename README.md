@@ -6,4 +6,4 @@ PI controller is used for the first-order filter transfer function whose functio
 RTL View
 ![default (1)](https://github.com/user-attachments/assets/788456bc-c500-4e06-a2b6-a815e76ecb4e)
 
-Advisor: T.Kosteski
+Advisor:  T.Kosteski
