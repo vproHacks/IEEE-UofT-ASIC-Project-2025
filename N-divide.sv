@@ -1,7 +1,7 @@
 module N_divide(
-  input logic clk,     
+  input logic clk,    //30MHz  
   input logic rst_n,    
-  output logic clk_fb   
+  output logic clk_fb   //10MHz feedback clock with 50% duty cycle
 );
 
   logic [1:0] cnt_pos, cnt_neg; 
