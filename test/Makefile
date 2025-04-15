@@ -5,7 +5,7 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = Top.v Phase_Frequency_Detector.sv N-divide.sv Digital_Controlled_Oscillator.sv Low-Pass_Filter.sv
+PROJECT_SOURCES = Top.sv Phase_Frequency_Detector.sv N-divide.sv Digital_Controlled_Oscillator.sv Low-Pass_Filter.sv
 
 ifneq ($(GATES),yes)
 

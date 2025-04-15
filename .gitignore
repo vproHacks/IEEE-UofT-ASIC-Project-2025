@@ -1,1 +1,5 @@
 tt10-verilog-template/
+test/__pycache__/
+test/sim_build/
+test/results.xml
+test/tb.vcd
