@@ -12,11 +12,11 @@ module tt_um_DPLL (
 );
 
   // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out[7:2]  = 5'b0; 
+  assign uo_out[7:4]  = 5'b0; 
   assign uio_out = 7'b0;
   assign uio_oe  = 7'b0;
 
-  DPLL_top dpll(.clk_ref(clk), .rst_n(rst_n), .pll_out(uo_out[0]), .locked(uo_out[1]));
+  DPLL_top dpll(.clk_ref(clk), .rst_n(rst_n), .pll_out(uo_out[0]), .locked(uo_out[1]), .up(uo_out[2]), .down(uo_out[3]));
 
   // List all unused inputs to prevent warnings
   wire _unused = &{ena, ui_in, uio_in, 1'b0};
@@ -27,7 +27,9 @@ module DPLL_top(
 	input logic clk_ref,       // Reference clock (10MHz)
 	input logic rst_n,         // Active-low reset
 	output logic pll_out,      // PLL output clock (100MHz)
-	output logic locked        // Lock indicator
+	output logic locked,        // Lock indicator
+	output logic up,
+	output logic down
 );
 
 	// Internal wiring
