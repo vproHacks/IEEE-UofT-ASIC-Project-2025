@@ -34,7 +34,7 @@ module PFD(     		//phase frequency detector
 	assign ref_edge = (~clk_ref_ff2) & clk_ref_ff1;
 	assign fb_edge  = (~clk_fb_ff2)  & clk_fb_ff1;
 	
-	
+	/*
 	//State Parameters
 	typedef enum logic [1:0]{
 		IDLE = 2'b00,
@@ -107,6 +107,23 @@ module PFD(     		//phase frequency detector
 				end
 		endcase
 	end
+	*/
 	
-	
+	always_comb begin
+		if(rst_n)begin
+			up <= 1'b0;
+			down <= 1'b0;
+		end else if(ref_edge && !fb_edge)begin
+			up <= 1'b1;
+			down <= 1'b0;
+		end else if(fb_edge && !ref_edge)begin
+			up <= 1'b0;
+			down <= 1'b1;
+		end else begin
+			up <= 1'b0;
+			down <= 1'b1;
+		end
+	end
+		
+		
 endmodule
