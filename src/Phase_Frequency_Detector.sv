@@ -3,6 +3,9 @@ module PFD(     		//phase frequency detector
 	input logic rst_n,
 	input logic clk_ref,
 	input logic clk_fb,
+	input logic scan_en,
+	input logic scan_in,
+	output logic scan_out,
 	output logic up,
 	output logic down
 );
@@ -23,6 +26,11 @@ module PFD(     		//phase frequency detector
 			clk_ref_ff2 <= 1'b0;
 			clk_fb_ff1 <= 1'b0;
 			clk_fb_ff2 <= 1'b0;
+		end else if(scan_en)begin				//scan chain operation when scan_en is asserted
+			clk_ref_ff1 <= scan_in;
+			clk_ref_ff2 <= clk_ref_ff1;
+			clk_fb_ff1 <= clk_ref_ff2;
+			clk_fb_ff2 <= clk_fb_ff1;
 		end else begin
 			clk_ref_ff1 <= clk_ref;
 			clk_ref_ff2 <= clk_ref_ff1;
@@ -33,6 +41,8 @@ module PFD(     		//phase frequency detector
 	
 	assign ref_edge = (~clk_ref_ff2) & clk_ref_ff1;
 	assign fb_edge  = (~clk_fb_ff2)  & clk_fb_ff1;
+	
+	assign scan_out = clk_fb_ff2;
 	
 	/*
 	//State Parameters
@@ -110,7 +120,7 @@ module PFD(     		//phase frequency detector
 	*/
 	
 	always_comb begin
-		if(rst_n)begin
+		if(!rst_n)begin
 			up <= 1'b0;
 			down <= 1'b0;
 		end else if(ref_edge && !fb_edge)begin
@@ -121,7 +131,7 @@ module PFD(     		//phase frequency detector
 			down <= 1'b1;
 		end else begin
 			up <= 1'b0;
-			down <= 1'b1;
+			down <= 1'b0;
 		end
 	end
 		
