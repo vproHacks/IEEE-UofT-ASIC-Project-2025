@@ -1,3 +1,7 @@
+//Phase Frequency Detector TB
+//By Joonseo Park
+
+/*
 //DUT
 module PFD(     		//phase frequency detector
 	input logic clk,
@@ -47,81 +51,6 @@ module PFD(     		//phase frequency detector
 	
 	assign scan_out = clk_fb_ff2;
 	
-	/*
-	//State Parameters
-	typedef enum logic [1:0]{
-		IDLE = 2'b00,
-		UP = 2'b01,
-		DOWN = 2'b10
-	}state_t;
-	
-	state_t current_state, next_state;
-	
-	//State Transition
-	always_ff@(posedge clk or negedge rst_n)begin
-		if(!rst_n)begin
-			current_state <= IDLE;
-		end else begin
-			current_state <= next_state;
-		end
-	end
-	
-	//State Transition Logic
-	always_comb begin
-		case(current_state)
-				IDLE: begin
-					if(ref_edge && !fb_edge)begin
-						next_state = UP;
-					end else if(fb_edge && !ref_edge)begin
-						next_state = DOWN;
-					end else begin
-						next_state = IDLE;
-					end
-				end
-				UP: begin
-					if(fb_edge)begin
-						next_state = IDLE;
-					end else begin
-						next_state = current_state;
-					end
-				end
-				DOWN: begin
-					if(ref_edge)begin
-						next_state = IDLE;
-					end else begin
-						next_state = current_state;
-					end
-				end
-				default: begin
-					next_state = IDLE;
-				end
-		endcase
-	end
-	
-	
-	//output stage
-	always_comb begin
-		case(current_state)
-				IDLE: begin
-					up <= 1'b0;
-					down <= 1'b0;
-				end
-				UP: begin
-					up <= 1'b1;
-					down <= 1'b0;
-				end
-				DOWN: begin
-					up <= 1'b0;
-					down <= 1'b1;
-				end
-				default:begin
-					up <= 1'b0;
-					down <= 1'b0;
-				end
-		endcase
-	end
-	*/
-	
 	//compare feedback clock to reference clock
 	//speed up if feedback clock slower
 	//slow down if feedback clock faster
@@ -143,6 +72,8 @@ module PFD(     		//phase frequency detector
 		
 		
 endmodule
+*/
+
 
 //transaction class
 class transaction;
@@ -174,7 +105,7 @@ endclass
 //generator
 class generator;
 
-    //declare transaction object
+    //declare transaction object variable
     transaction packet;
 
     //declare mailbox "pointer"
@@ -183,7 +114,7 @@ class generator;
 	event next; //wait for a signal before generating the next transaction
   	event done; //Signals that the generator has completed generating all transactions
 
-	//generator constructor
+	//generator constructor; take in a mailbox and bind object's mailbox "pointer" to input mbx
     function new(mailbox #(transaction) mbx_in);  
         this.mbx = mbx_in;
     endfunction
@@ -215,7 +146,7 @@ class driver;
     //declare virtual interface
     virtual PFD_INTERFACE vinf;
 
-    //declare transaction object
+    //declare transaction object variable
     transaction packet;
 
     //declare mailbox "pointer"
@@ -258,8 +189,127 @@ class driver;
 endclass
 
 //monitor
+//use virtual interface handle to monitor signal changes in interfaces
+//captures information & initializes a packet to send to scoreboard
+class monitor;
+
+	//declare virtual interface
+    virtual PFD_INTERFACE vinf;
+
+    //declare transaction object variable
+	transaction packet;
+
+	//declare mailbox "pointer"
+    mailbox #(transaction) mbx; 
+
+	//monitor constructor
+    function new(mailbox #(transaction) mbx_in);  
+        this.mbx = mbx_in;
+    endfunction
+
+	task sample_interface();
+
+		forever begin
+
+			@(posedge vinf.clk);
+			packet = new(); //create new transaction object
+			packet.rst_n = vinf.rst_n;
+			packet.up = vinf.up;
+			packet.down = vinf.down;
+			mbx.put(packet);
+			$display("transaction object: up = %0b, = down")
+
+		end
+
+	endtask
+
+endclass
 
 //scoreboard
+//receive transaction sampled/initialized by monitor
+//has reference model behaving the same way as DUT
+//compare output of DUT to reference model
+class scoreboard;
+
+    //declare transaction object variable
+	transaction packet;
+
+	//declare mailbox "pointer"
+    mailbox #(transaction) mbx; 
+
+	//indicates to generator that next transaction can be started
+	event next;
+
+	//scoreboard constructor
+    function new(mailbox #(transaction) mbx_in);  
+        this.mbx = mbx_in;
+    endfunction
+
+	task compare_golden_output;
+
+		bit fb_clk, fb_clk2, ref_clk, ref_clk2;
+		bit ref_hasedge, fb_hasedge;
+		bit initialized = 0;
+		bit expected_up, expected_down;
+		int error_count = 0;
+
+		forever begin
+
+			mbx.get(packet); //wait until new transaction available at mailbox then fetch
+			$display("DUT outputs: up --> %0b, down --> %0b", packet.up, packet.down);
+
+			//shift in the clock data from transactions
+			fb_clk2 = fb_clk;
+			fb_clk = packet.clk_fb;
+			ref_clk2 = ref_clk;
+			ref_clk = packet.clk_ref;
+
+			//start checking when we have previous and current clock initialized (wait one clock cycle)
+			if (!initialized) initialized = 1;
+
+			else begin
+
+				//determine if feedback/ref. clock has + edge
+				//remember we cannot use continuous assignment inside procedural (alwyas/init) blocks
+				ref_hasedge = (~ref_clk2) & ref_clk; 
+				fb_hasedge  = (~fb_clk2)  & fb_clk; 
+
+				//reference model:
+				//NOTE: replace with expected output variable
+				if(!packet.rst_n)begin
+					expected_up <= 1'b0;
+					expected_down <= 1'b0;
+				end else if(ref_hasedge && !fb_hasedge)begin //if ref. clock leads feedback
+					expected_up <= 1'b1; //speed up
+					expected_down <= 1'b0; 
+				end else if(fb_hasedge && !ref_hasedge)begin //if feedback clock leads ref.
+					expected_up <= 1'b0;
+					expected_down <= 1'b1; //slow down
+				end else begin //ref and feedback clock align perfectly
+					expected_up <= 1'b0; 
+					expected_down <= 1'b0;
+				end
+
+				$display("our up counter = %0b, our down counter = %0b", expected_up, expected_down);
+
+				//the checker
+				//make this into a function in the future
+				if (packet.up == expected_up || packet.down == expected_down) $display("TEST PASSED");
+
+				else begin
+					$display("TEST FAILED! Expected output: up counter = %0b, down counter = %0b VS Current output: up counter = %0b, down counter = %0b", packet.up, packet.down, expected_up, expected_down);
+					error_count++;
+				end
+
+			end
+
+			->next; //trigger next event for generator to create more transactions
+
+		end
+
+	endtask
+
+endclass
 
 //environment
 
