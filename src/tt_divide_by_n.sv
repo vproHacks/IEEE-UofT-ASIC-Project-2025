@@ -1,7 +1,7 @@
 module tt_divide_by_n (
-  input logic i_clk, // 30MHz
+  input logic i_clk_gen,  // 30MHz
   input logic i_rst_n,
-  output logic o_clk, // 10MHz feedback clock with 50% duty cycle
+  output logic o_clk_div, // 10MHz feedback clock with 50% duty cycle
 
   // Scan chain
   input logic i_scan_en,
@@ -14,7 +14,7 @@ module tt_divide_by_n (
 
   logic scan_chain_connection; // Continuous scan chain
 
-  always_ff @(posedge i_clk, negedge i_rst_n) begin
+  always_ff @(posedge i_clk_gen, negedge i_rst_n) begin
     if (!i_rst_n) begin
       cnt_pos <= 2'b0;
 	  end else if (i_scan_en) begin
@@ -27,7 +27,7 @@ module tt_divide_by_n (
     end
   end
 
-  always_ff @(negedge i_clk, negedge i_rst_n) begin
+  always_ff @(negedge i_clk_gen, negedge i_rst_n) begin
     if (!i_rst_n) begin
       cnt_neg <= 2'b0;
     end else if (i_scan_en) begin
@@ -40,7 +40,7 @@ module tt_divide_by_n (
     end
   end
 
-  assign o_clk = ~|cnt_pos || ~|cnt_neg;
+  assign o_clk_div = ~|cnt_pos || ~|cnt_neg;
 
   // Scan chain
   assign scan_chain_connection = cnt_pos[1];

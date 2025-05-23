@@ -1,9 +1,9 @@
 module tt_lpf (
-	// Use PI controller for first order filter transfer function
-	localparam int KP = 7, // Proportional gain
-	localparam int KI = 4  // Integral gain
+  // Use PI controller for first order filter transfer function
+  localparam int KP = 7, // Proportional gain
+  localparam int KI = 4  // Integral gain
 ) ( // Low-pass filter
-	input logic                i_clk,
+	input logic                i_clk_gen,
 	input logic                i_rst_n,
 	input logic                i_up,
 	input logic                i_down,
@@ -34,7 +34,7 @@ module tt_lpf (
 	end
 
 	// Compute Ki/s integral
-	always_ff @(posedge i_clk or negedge i_rst_n)begin
+	always_ff @(posedge i_clk_gen, negedge i_rst_n)begin
 		if (!i_rst_n) begin
 			phase_accumulator <= 32'd0;
 		end else if (i_scan_en) begin //scan chain operation when scan_en is asserted

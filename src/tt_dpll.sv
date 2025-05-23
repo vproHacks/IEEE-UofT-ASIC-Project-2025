@@ -1,10 +1,12 @@
 module tt_dpll (
-	input logic  i_clk, // Reference clock (10MHz)
+	input logic  i_clk_ref, // Reference clock (10MHz)
 	input logic  i_rst_n,   // Active-low reset
-	output logic o_clk, // PLL output clock (100MHz)
+	output logic o_clk_gen, // Generated clock (100MHz)
 	output logic o_locked,  // Lock indicator
 	output logic o_up,
 	output logic o_down,
+
+  output logic o_clk_div, // Divided clock (10MHz). For debug purposes only.
 
   // Scan chain
 	input logic i_scan_en,
@@ -13,17 +15,19 @@ module tt_dpll (
 );
 
 	// Internal wiring
-	logic clk_fb;
 	logic signed [15:0] control;
 
-	logic scan_chain_pfd_to_lpf, scan_chain_lpf_to_divide_by_n, scan_chain_divide_by_n_to_lock_indicator;	//continuous scan chain
+  // Scan chain
+	logic scan_chain_pfd_to_lpf;
+  logic scan_chain_lpf_to_divide_by_n;
+  logic scan_chain_divide_by_n_to_lock_indicator;
 
 	// Phase Frequency Detector
 	tt_pfd pfd (
-		.i_clk(o_clk),
+		.i_clk_gen(o_clk_gen),
 		.i_rst_n(i_rst_n),
 		.i_clk_ref(i_clk_ref),
-		.i_clk_fb(clk_fb),
+		.i_clk_div(o_clk_div),
 		.o_up(up),
 		.o_down(down),
 
@@ -35,11 +39,11 @@ module tt_dpll (
 
 	// Low Pass Filter
 	tt_lpf lpf (
-		.clk(o_clk),
+		.i_clk_gen(o_clk_gen),
 		.i_rst_n(i_rst_n),
-		.up(up),
-		.down(down),
-		.filtered_control_signal(control),
+		.o_up(up),
+		.o_down(down),
+		.o_filtered_control_signal(control), // Todo: What is this used for?
 
     // Scan chain
 		.i_scan_en(i_scan_en),
@@ -48,10 +52,10 @@ module tt_dpll (
 	);
 
 	// N-Divide for Feedback Clock
-	  tt_divide_by_n divide_by_n (
-		.i_clk(o_clk),
+  tt_divide_by_n divide_by_n (
+		.i_clk_gen(o_clk_gen),
 		.i_rst_n(i_rst_n),
-		.o_clk(clk_fb),
+		.o_clk_div(o_clk_div),
 
     // Scan chain
 		.i_scan_en(i_scan_en),
@@ -60,7 +64,7 @@ module tt_dpll (
 	);
 
 	// Lock indicator
-	always_ff @(posedge o_clk, negedge i_rst_n) begin
+	always_ff @(posedge o_clk_gen, negedge i_rst_n) begin
 		if (!i_rst_n) begin
 			o_locked <= 1'b0;
 		end else if (i_scan_en)begin
