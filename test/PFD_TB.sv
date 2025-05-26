@@ -144,7 +144,7 @@ endclass
 class driver;
 
     //declare virtual interface
-    virtual PFD_INTERFACE vinf;
+    virtual PFD_INTERFACE.TB vinf;
 
     //declare transaction object variable
     transaction packet;
@@ -165,10 +165,12 @@ class driver;
         vinf.rst_n = 0;
         vinf.up = 0;
         vinf.down = 0;
+		repeat(2) @(posedge vinf.clk); //wait two clock cycles
+		vinf.rst_n = 1;
 
     endtask
 
-    //drive signals to DUT
+    //drive signals to DUTa
     task driveStimuli;
 
         forever begin
@@ -194,7 +196,7 @@ endclass
 class monitor;
 
 	//declare virtual interface
-    virtual PFD_INTERFACE vinf;
+    virtual PFD_INTERFACE.DUT vinf;
 
     //declare transaction object variable
 	transaction packet;
@@ -217,7 +219,7 @@ class monitor;
 			packet.up = vinf.up;
 			packet.down = vinf.down;
 			mbx.put(packet);
-			$display("transaction object: up = %0b, = down")
+			$display("transaction object: up = %0b, down = %0b", packet.up, packet.down);
 
 		end
 
@@ -230,6 +232,15 @@ endclass
 //has reference model behaving the same way as DUT
 //compare output of DUT to reference model
 class scoreboard;
+
+	bit fb_clk = 0;
+	bit fb_clk2 = 0;
+	bit ref_clk = 0;
+	bit ref_clk2 = 0;
+	bit ref_hasedge, fb_hasedge;
+	bit initialized = 0;
+	bit expected_up, expected_down;
+	int error_count = 0;
 
     //declare transaction object variable
 	transaction packet;
@@ -246,12 +257,6 @@ class scoreboard;
     endfunction
 
 	task compare_golden_output;
-
-		bit fb_clk, fb_clk2, ref_clk, ref_clk2;
-		bit ref_hasedge, fb_hasedge;
-		bit initialized = 0;
-		bit expected_up, expected_down;
-		int error_count = 0;
 
 		forever begin
 
@@ -277,24 +282,24 @@ class scoreboard;
 				//reference model:
 				//NOTE: replace with expected output variable
 				if(!packet.rst_n)begin
-					expected_up <= 1'b0;
-					expected_down <= 1'b0;
+					expected_up = 1'b0;
+					expected_down = 1'b0;
 				end else if(ref_hasedge && !fb_hasedge)begin //if ref. clock leads feedback
-					expected_up <= 1'b1; //speed up
-					expected_down <= 1'b0; 
+					expected_up = 1'b1; //speed up
+					expected_down = 1'b0; 
 				end else if(fb_hasedge && !ref_hasedge)begin //if feedback clock leads ref.
-					expected_up <= 1'b0;
+					expected_up = 1'b0;
 					expected_down <= 1'b1; //slow down
 				end else begin //ref and feedback clock align perfectly
-					expected_up <= 1'b0; 
-					expected_down <= 1'b0;
+					expected_up = 1'b0; 
+					expected_down = 1'b0;
 				end
 
 				$display("our up counter = %0b, our down counter = %0b", expected_up, expected_down);
 
 				//the checker
 				//make this into a function in the future
-				if (packet.up == expected_up || packet.down == expected_down) $display("TEST PASSED");
+				if (packet.up == expected_up && packet.down == expected_down) $display("TEST PASSED");
 
 				else begin
 					$display("TEST FAILED! Expected output: up counter = %0b, down counter = %0b VS Current output: up counter = %0b, down counter = %0b", packet.up, packet.down, expected_up, expected_down);
@@ -312,24 +317,116 @@ class scoreboard;
 endclass
 
 //environment
+//declare test bench components
+class env;
 
-//test
+	generator g;
+	driver d;
+	scoreboard s;
+	monitor m;
+
+	//declare mailboxes for generator->driver and monitor->scoreboard
+	mailbox #(transaction) generation;
+	mailbox #(transaction) verification;
+	virtual PFD_INTERFACE.TB vinf_TB;
+	virtual PFD_INTERFACE.DUT vinf_DUT;
+
+
+	function new(virtual PFD_INTERFACE interfaceIn);
+		//pass corresponding mailbox to components
+		g = new(generation);
+		d = new(generation);
+		s = new(verification);
+		m = new(verification);
+
+		//bind interface pointers to input interface 
+		//consider interface modport from DUT and TB perspectives
+		this.vinf_TB = interfaceIn.TB;
+		this.vinf_DUT = interfaceIn.DUT;
+		//bind virtual interface to driver and monitor
+		d.vinf = vinf_TB;
+		m.vinf = vinf_DUT;
+
+		g.next = next;
+		d.next = next;
+	endfunction
+
+	task start();
+
+		fork
+			g.generate_stimuli();
+			d.driveStimuli();
+			m.sample_interface();
+			s.compare_golden_output();
+		join_any
+
+	endtask
+
+	task main();
+
+		d.reset(); //reset DUT using driver
+		start(); //activate TB components
+		wait(g.done.triggered); //wait until generator completes generation of packets
+		if (s.error_count == 0) $display("ALL TESTS PASSED");
+		else if (s.error_count > 0) $display("%0d tests failed!", s.error_count);
+
+	endtask
+
+endclass
 
 //interface
-class PFD_INTERFACE;
+interface PFD_INTERFACE;
 
     logic clk;
 	logic rst_n;
 	logic clk_fb, clk_ref;
 	logic up, down;
 
-endclass
+	modport TB (output clk, rst_n, clk_fb, clk_ref, input up, down);
+
+	modport DUT (output up, down, input clk, rst_n, clk_fb, clk_ref);
+
+endinterface
 
 //testbench top
 module tb;
 
-    //generate clock
+	//declare testbench components
+	env e;
 
     //instantiate interface
+	PFD_INTERFACE inf();
+
+	//initialize clock
+	initial begin
+		inf.clk = 0;
+	end
+
+    //generate clock
+	always #10 inf.clk = ~inf.clk; //generate 50Mhz clock
+
+	//instantiate DUT
+	PFD u0 (
+		.clk(inf.clk), .rst_n(inf.rst_n), .clk_ref(inf.clk_ref), .clk_fb(inf.clk_fb), .up(inf.up), .down(inf.down)
+	);
+
+	/*
+//DUT
+module PFD(     		//phase frequency detector
+	input logic clk,
+	input logic rst_n,
+	input logic clk_ref,
+	input logic clk_fb,
+	input logic scan_en,
+	input logic scan_in,
+	output logic scan_out,
+	output logic up,
+	output logic down
+);*/
+
+	initial begin
+		e = new(inf);
+		e.main();
+	end
 
 endmodule
