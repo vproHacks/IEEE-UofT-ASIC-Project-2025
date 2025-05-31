@@ -1,4 +1,4 @@
-module tt_divide_by_n (
+module tt_divide_by_3 (
   input logic i_clk_gen,  // 30MHz
   input logic i_rst_n,
   output logic o_clk_div, // 10MHz feedback clock with 50% duty cycle

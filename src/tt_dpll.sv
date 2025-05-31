@@ -52,7 +52,7 @@ module tt_dpll (
 	);
 
 	// N-Divide for Feedback Clock
-  tt_divide_by_n divide_by_n (
+  tt_divide_by_3 divide_by_3 (
 		.i_clk_gen(o_clk_gen),
 		.i_rst_n(i_rst_n),
 		.o_clk_div(o_clk_div),
