@@ -1,22 +1,22 @@
-#SDC Timing constraint
+# SDC Timing Constraints
 
-#reference clock(10M)
-create_clock -name clk_ref -period 100 [get_ports {clk_ref}]
+# Reference clock (10MHz)
+create_clock -name clk_ref -period 100 [get_ports i_clk_ref]
 
-#clock from DCO(100MHz)
-create_generated_clock -name pll_out -source [get_ports clk_ref] -multiply_by 10 [get_cells DCO_inst/clk_out]
+# Genereated clock (100MHz)
+create_generated_clock -name clk_gen -source [get_ports i_clk_ref] -multiply_by 10 [get_ports o_uo_out[0]]
 
-#10MHz feedback clock
-create_generated_clock -name clk_fb -source [get_cells DCO_inst/clk_out] -divide_by 10 [get_pins u4/clk_fb]
+# Divided clock (10MHz)
+create_generated_clock -name clk_div -source [get_ports o_clk_gen] -divide_by 10 [get_ports o_uo_out[5]]
 
 derive_clock_uncertainty
 
 set_clock_groups -exclusive \
     -group [get_clocks clk_ref] \
-    -group [get_clocks clk_fb]
+    -group [get_clocks clk_div]
 	
-set_false_path -from [get_ports rst_n]
+set_false_path -from [get_ports i_rst_n]
 
-set_input_delay -clock [get_clocks clk_ref] 5 [get_ports clk_ref]
+set_input_delay -clock [get_clocks clk_ref] 5 [get_ports i_clk_ref]
 
-set_output_delay -clock [get_clocks pll_out] 2 [get_ports pll_out]
+set_output_delay -clock [get_clocks clk_gen] 2 [get_ports o_clk_gen]
