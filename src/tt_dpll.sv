@@ -28,8 +28,8 @@ module tt_dpll (
 		.i_rst_n(i_rst_n),
 		.i_clk_ref(i_clk_ref),
 		.i_clk_div(o_clk_div),
-		.o_up(up),
-		.o_down(down),
+		.o_up(o_up),
+		.o_down(o_down),
 
     // Scan chain
 		.i_scan_en(i_scan_en),
@@ -41,8 +41,8 @@ module tt_dpll (
 	tt_lpf lpf (
 		.i_clk_gen(o_clk_gen),
 		.i_rst_n(i_rst_n),
-		.o_up(up),
-		.o_down(down),
+		.i_up(o_up),
+		.i_down(o_down),
 		.o_filtered_control_signal(control), // Todo: What is this used for?
 
     // Scan chain
