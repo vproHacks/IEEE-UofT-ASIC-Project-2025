@@ -35,6 +35,12 @@ module tt_dpll (
  	This is only for FPGA validation!
  	*/
 
+	tt_dco dco (
+		.i_enable(1'b1),
+  		.i_control(control),
+  		.o_clk_gen(o_clk_gen)
+	);
+
 	// Phase Frequency Detector
 	tt_pfd pfd (
 		.i_clk_gen(o_clk_gen),

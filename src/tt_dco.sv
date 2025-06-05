@@ -5,7 +5,7 @@
 
 module tt_dco (
   input logic               i_enable,
-  input logic signed [15:0] i_control, // PI controller output
+  input logic signed [31:0] i_control, // PI controller output
   output logic              o_clk_gen
 );
   localparam NUM_INV_STAGES = 5;
