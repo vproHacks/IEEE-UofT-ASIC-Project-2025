@@ -10,7 +10,6 @@ module tt_divide_by_3 (
 );
 
   logic [1:0] cnt_pos, cnt_neg;
-  logic clk_pos, clk_neg;
 
   logic scan_chain_connection; // Continuous scan chain
 

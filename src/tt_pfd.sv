@@ -48,17 +48,17 @@ module tt_pfd ( // Phase frequency detector
 
 	always_comb begin
 		if (!i_rst_n) begin
-			o_up <= 1'b0;
-			o_down <= 1'b0;
+			o_up = 1'b0;
+			o_down = 1'b0;
 		end else if (clk_ref_edge && !clk_div_edge) begin
-			o_up <= 1'b1;
-			o_down <= 1'b0;
+			o_up = 1'b1;
+			o_down = 1'b0;
 		end else if (clk_div_edge && !clk_ref_edge) begin
-			o_up <= 1'b0;
-			o_down <= 1'b1;
+			o_up = 1'b0;
+			o_down = 1'b1;
 		end else begin
-			o_up <= 1'b0;
-			o_down <= 1'b0;
+			o_up = 1'b0;
+			o_down = 1'b0;
 		end
 	end
 

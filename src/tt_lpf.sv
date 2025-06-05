@@ -3,7 +3,7 @@ module tt_lpf ( // Low-pass filter
 	input logic                i_rst_n,
 	input logic                i_up,
 	input logic                i_down,
-	output logic signed [15:0] o_filtered_control_signal,
+	output logic signed [31:0] o_filtered_control_signal,
 
   // Scan chain
 	input logic  i_scan_en,
@@ -18,17 +18,17 @@ module tt_lpf ( // Low-pass filter
 
 	// Phase error decoding
 	always_comb begin
-    error = 16'b0;
-		if (!i_rst_n) begin
-			error = 16'b0;
-    end else begin
-			case ({i_up, i_down})
-				2'b00: error = 16'b0;
-				2'b01: error = 16'b1;
-				2'b10: error = -16'b1;
-				default: error = 16'b0;
-			endcase
-    end
+		error = 16'b0;
+			if (!i_rst_n) begin
+				error = 16'b0;
+		end else begin
+				case ({i_up, i_down})
+					2'b00: error = 16'b0;
+					2'b01: error = 16'b1;
+					2'b10: error = -16'b1;
+					default: error = 16'b0;
+				endcase
+		end
 	end
 
 	// Compute Ki/s integral

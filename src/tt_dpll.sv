@@ -15,12 +15,25 @@ module tt_dpll (
 );
 
 	// Internal wiring
-	logic signed [15:0] control;
+	logic signed [31:0] control;
 
   // Scan chain
 	logic scan_chain_pfd_to_lpf;
   logic scan_chain_lpf_to_divide_by_n;
   logic scan_chain_divide_by_n_to_lock_indicator;
+
+		/* Altera PLL IP for 100MHz
+ 	in case of actual asic implementation, replace it with DCO cell
+  
+	DCO_0002 u1(
+		.refclk(i_clk_ref),
+		.rst(!i_rst_n),
+		.outclk_0(o_clk_gen),
+		.locked(o_locked)
+	);
+ 
+ 	This is only for FPGA validation!
+ 	*/
 
 	// Phase Frequency Detector
 	tt_pfd pfd (
