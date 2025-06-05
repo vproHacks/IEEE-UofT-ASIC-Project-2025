@@ -32,9 +32,9 @@ module tt_dpll (
 		.o_down(down),
 
     // Scan chain
-		.scan_en(i_scan_en),
-		.scan_in(i_scan_in),
-		.scan_out(scan_chain_pfd_to_lpf)
+		.i_scan_en(i_scan_en),
+		.i_scan_in(i_scan_in),
+		.o_scan_out(scan_chain_pfd_to_lpf)
 	);
 
 	// Low Pass Filter
@@ -77,6 +77,6 @@ module tt_dpll (
 	end
 
   // Scan chain
-	assign scan_out = o_locked;
+	assign o_scan_out = o_locked;
 
 endmodule

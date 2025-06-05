@@ -30,9 +30,9 @@ module tt_um_dpll (
     .o_clk_div(uo_out[5]),
 
     // Scan chain
-    .i_scan_en_top(ui_in[0]),
-	  .i_scan_in_top(ui_in[1]),
-    .o_scan_out_top(uo_out[4])
+    .i_scan_en(ui_in[0]),
+	  .i_scan_in(ui_in[1]),
+    .o_scan_out(uo_out[4])
   );
 
   // List all unused inputs to prevent warnings
