@@ -11,8 +11,8 @@ module tt_lpf ( // Low-pass filter
 	output logic o_scan_out
 );
 	// Use PI controller for first order filter transfer function
-	localparam KP = 7, // Proportional gain
-	localparam KI = 4  // Integral gain
+	localparam KP = 7; // Proportional gain
+	localparam KI = 4;  // Integral gain
 	logic signed [15:0] error;
 	logic signed [31:0] phase_accumulator;
 
