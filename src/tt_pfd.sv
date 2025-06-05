@@ -22,7 +22,7 @@ module tt_pfd ( // Phase frequency detector
 	logic clk_div_edge;  // Feedback signal rising edge
 
 	// Capture rising edge of either signal
-	always_ff @(posedge i_clk, negedge i_rst_n)begin
+	always_ff @(posedge i_clk_gen, negedge i_rst_n)begin
 		if (!i_rst_n) begin
 			clk_ref_ff1 <= 1'b0;
 			clk_ref_ff2 <= 1'b0;

@@ -69,7 +69,7 @@ module tt_dpll (
 			o_locked <= 1'b0;
 		end else if (i_scan_en)begin
 			o_locked <= scan_chain_divide_by_n_to_lock_indicator;
-		end else if (!up && !down) begin
+		end else if (!o_up && !o_down) begin
 			o_locked <= 1'b1;
 		end else begin
 			o_locked <= 1'b0;
