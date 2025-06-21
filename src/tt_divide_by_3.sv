@@ -19,7 +19,7 @@ module tt_divide_by_3 (
 	  end else if (i_scan_en) begin
       cnt_pos[0] <= i_scan_in;
       cnt_pos[1] <= cnt_pos[0];
-    end else if (cnt_pos >= 2'b10) begin
+	  end else if (cnt_pos == 2'b10) begin
       cnt_pos <= 2'b0;
     end else begin
       cnt_pos <= cnt_pos + 2'b1;
@@ -32,14 +32,14 @@ module tt_divide_by_3 (
     end else if (i_scan_en) begin
       cnt_neg[0] <= scan_chain_connection;
       cnt_neg[1] <= cnt_neg[0];
-    end else if (cnt_neg >= 2'b10) begin
+    end else if (cnt_neg == 2'b10) begin
       cnt_neg <= 2'b0;
     end else begin
-      cnt_neg <= cnt_neg + 1;
+      cnt_neg <= cnt_neg + 2'b1;
     end
   end
 
-  assign o_clk_div = ~|cnt_pos || ~|cnt_neg;
+  assign o_clk_div = cnt_pos == 2'b0 || cnt_neg == 2'b0;
 
   // Scan chain
   assign scan_chain_connection = cnt_pos[1];
